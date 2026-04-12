@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-require_relative "x_thread/version"
-require_relative "x_thread/configuration"
-require_relative "x_thread/engine" if defined?(Rails::Engine)
+require_relative "x_queue/version"
+require_relative "x_queue/configuration"
+require_relative "x_queue/engine" if defined?(Rails::Engine)
 
-module XThread
+module XQueue
   class Error < StandardError; end
 
   class << self

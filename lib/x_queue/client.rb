@@ -2,10 +2,10 @@
 
 require "x"
 
-module XThread
+module XQueue
   class Client
     def initialize(access_token:, access_token_secret:)
-      config = XThread.configuration
+      config = XQueue.configuration
 
       @client = X::Client.new(
         api_key: config.api_key,

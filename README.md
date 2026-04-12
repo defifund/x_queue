@@ -1,4 +1,4 @@
-# XThread
+# XQueue
 
 A Rails engine for scheduling and posting tweet threads to X (Twitter).
 
@@ -9,26 +9,26 @@ Drop it into any Rails app — configure your API keys, schedule tweets or threa
 Add to your Gemfile:
 
 ```ruby
-gem "x_thread"
+gem "x_queue"
 ```
 
 Run the installer:
 
 ```bash
 bundle install
-bin/rails generate x_thread:install
+bin/rails generate x_queue:install
 bin/rails db:migrate
 ```
 
 This creates:
-- `config/initializers/x_thread.rb` — configuration file
-- `db/migrate/xxx_create_x_thread_tweets.rb` — tweets table
+- `config/initializers/x_queue.rb` — configuration file
+- `db/migrate/xxx_create_x_queue_tweets.rb` — tweets table
 
 ## Configuration
 
 ```ruby
-# config/initializers/x_thread.rb
-XThread.configure do |config|
+# config/initializers/x_queue.rb
+XQueue.configure do |config|
   config.api_key        = Rails.application.credentials.dig(:x, :api_key)
   config.api_key_secret = Rails.application.credentials.dig(:x, :api_key_secret)
 
@@ -46,10 +46,9 @@ end
 Each tweet is posted separately, spaced out by `delay_range` minutes.
 
 ```ruby
-XThread::Scheduler.tweets(
+XQueue::Scheduler.tweets(
   texts: ["First tweet", "Second tweet"],
-  access_token: user_access_token,
-  access_token_secret: user_access_token_secret,
+  account: user_account,
   source: article  # optional, any ActiveRecord model
 )
 ```
@@ -59,14 +58,13 @@ XThread::Scheduler.tweets(
 Tweets are posted as a reply chain. The first tweet posts at the scheduled time, then each subsequent tweet replies to the previous one.
 
 ```ruby
-XThread::Scheduler.thread(
+XQueue::Scheduler.thread(
   texts: [
     "1/3 Here's something interesting...",
     "2/3 Let me explain further...",
     "3/3 In conclusion..."
   ],
-  access_token: user_access_token,
-  access_token_secret: user_access_token_secret,
+  account: user_account,
   source: article  # optional
 )
 ```
@@ -78,7 +76,7 @@ The `source` parameter accepts any ActiveRecord model. This lets you track which
 ```ruby
 # In your model
 class Article < ApplicationRecord
-  has_many :tweets, as: :source, class_name: "XThread::Tweet"
+  has_many :tweets, as: :source, class_name: "XQueue::Tweet"
 end
 ```
 
@@ -86,13 +84,13 @@ end
 
 ```ruby
 # All tweets for a source
-XThread::Tweet.where(source: article)
+XQueue::Tweet.where(source: article)
 
 # Pending tweets
-XThread::Tweet.scheduled
+XQueue::Tweet.scheduled
 
 # Failed tweets
-XThread::Tweet.failed
+XQueue::Tweet.failed
 ```
 
 ## How it works

@@ -3,7 +3,7 @@
 require "rails/generators"
 require "rails/generators/active_record"
 
-module XThread
+module XQueue
   module Generators
     class InstallGenerator < Rails::Generators::Base
       include ActiveRecord::Generators::Migration
@@ -11,12 +11,12 @@ module XThread
       source_root File.expand_path("templates", __dir__)
 
       def copy_migration
-        migration_template "create_x_thread_tweets.rb.erb",
-          File.join(db_migrate_path, "create_x_thread_tweets.rb")
+        migration_template "create_x_queue_tweets.rb.erb",
+          File.join(db_migrate_path, "create_x_queue_tweets.rb")
       end
 
       def copy_initializer
-        template "initializer.rb.erb", "config/initializers/x_thread.rb"
+        template "initializer.rb.erb", "config/initializers/x_queue.rb"
       end
 
       private

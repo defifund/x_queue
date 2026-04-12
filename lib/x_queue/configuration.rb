@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module XThread
+module XQueue
   class Configuration
     attr_accessor :api_key, :api_key_secret,
                   :delay_range, :thread_delay_range,

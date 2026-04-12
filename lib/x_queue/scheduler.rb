@@ -1,26 +1,24 @@
 # frozen_string_literal: true
 
-module XThread
+module XQueue
   class Scheduler
     # Schedule independent tweets (each posted separately with delays).
     #
-    #   XThread::Scheduler.tweets(
+    #   XQueue::Scheduler.tweets(
     #     texts: ["tweet 1", "tweet 2"],
-    #     access_token: "...",
-    #     access_token_secret: "...",
+    #     account: account,
     #     source: article  # optional, polymorphic
     #   )
-    def self.tweets(texts:, access_token:, access_token_secret:, source: nil)
+    def self.tweets(texts:, account:, source: nil)
       return 0 if texts.blank?
 
-      config = XThread.configuration
-      scheduled_at = next_slot(access_token)
+      config = XQueue.configuration
+      scheduled_at = next_slot(account)
 
       texts.each do |text|
         Tweet.create!(
           content: text,
-          access_token: access_token,
-          access_token_secret: access_token_secret,
+          account: account,
           source: source,
           status: :scheduled,
           scheduled_at: scheduled_at
@@ -33,23 +31,21 @@ module XThread
 
     # Schedule a thread (tweets posted as replies in sequence).
     #
-    #   XThread::Scheduler.thread(
+    #   XQueue::Scheduler.thread(
     #     texts: ["1/3 ...", "2/3 ...", "3/3 ..."],
-    #     access_token: "...",
-    #     access_token_secret: "...",
+    #     account: account,
     #     source: article  # optional
     #   )
-    def self.thread(texts:, access_token:, access_token_secret:, source: nil)
+    def self.thread(texts:, account:, source: nil)
       return 0 if texts.blank?
 
       thread_id = SecureRandom.uuid
-      scheduled_at = next_slot(access_token)
+      scheduled_at = next_slot(account)
 
       texts.each_with_index do |text, i|
         Tweet.create!(
           content: text,
-          access_token: access_token,
-          access_token_secret: access_token_secret,
+          account: account,
           source: source,
           status: :scheduled,
           scheduled_at: scheduled_at,
@@ -61,9 +57,9 @@ module XThread
       texts.size
     end
 
-    def self.next_slot(access_token)
-      config = XThread.configuration
-      last_time = Tweet.where(access_token: access_token)
+    def self.next_slot(account)
+      config = XQueue.configuration
+      last_time = Tweet.where(account: account)
         .where(status: [:scheduled, :posted])
         .order(scheduled_at: :desc)
         .pick(:scheduled_at)

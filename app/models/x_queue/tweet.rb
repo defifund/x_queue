@@ -1,10 +1,11 @@
 # frozen_string_literal: true
 
-module XThread
+module XQueue
   class Tweet < ActiveRecord::Base
-    self.table_name = "x_thread_tweets"
+    self.table_name = "x_queue_tweets"
 
     belongs_to :source, polymorphic: true, optional: true
+    belongs_to :account, polymorphic: true, optional: true
 
     enum :status, {draft: 0, scheduled: 1, posted: 2, failed: 3}
 
@@ -22,8 +23,8 @@ module XThread
     private
 
     def enqueue_post_job
-      XThread::PostTweetJob
-        .set(wait_until: scheduled_at, queue: XThread.configuration.queue_name)
+      XQueue::PostTweetJob
+        .set(wait_until: scheduled_at, queue: XQueue.configuration.queue_name)
         .perform_later(id)
     end
   end

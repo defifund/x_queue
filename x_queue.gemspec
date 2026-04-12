@@ -1,21 +1,21 @@
 # frozen_string_literal: true
 
-require_relative "lib/x_thread/version"
+require_relative "lib/x_queue/version"
 
 Gem::Specification.new do |spec|
-  spec.name = "x_thread"
-  spec.version = XThread::VERSION
+  spec.name = "x_queue"
+  spec.version = XQueue::VERSION
   spec.authors = ["Bob Wang"]
   spec.email = ["7777@hey.com"]
 
   spec.summary = "Schedule and post tweet threads to X (Twitter) from any Rails app."
   spec.description = "A Rails engine that manages tweet scheduling, thread chaining, and posting to the X API. Supports multi-account, polymorphic source association, and configurable delays."
-  spec.homepage = "https://github.com/defifund/x_thread"
+  spec.homepage = "https://github.com/defifund/x_queue"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2.0"
 
   spec.metadata["homepage_uri"] = spec.homepage
-  spec.metadata["source_code_uri"] = "https://github.com/defifund/x_thread"
+  spec.metadata["source_code_uri"] = "https://github.com/defifund/x_queue"
 
   gemspec = File.basename(__FILE__)
   spec.files = IO.popen(%w[git ls-files -z], chdir: __dir__, err: IO::NULL) do |ls|
