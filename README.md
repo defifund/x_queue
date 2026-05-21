@@ -49,7 +49,8 @@ Each tweet is posted separately, spaced out by `delay_range` minutes.
 XQueue::Scheduler.tweets(
   texts: ["First tweet", "Second tweet"],
   account: user_account,
-  source: article  # optional, any ActiveRecord model
+  source: article,  # optional, any ActiveRecord model
+  not_before: article.published_at # optional
 )
 ```
 
@@ -65,9 +66,14 @@ XQueue::Scheduler.thread(
     "3/3 In conclusion..."
   ],
   account: user_account,
-  source: article  # optional
+  source: article, # optional
+  not_before: article.published_at # optional
 )
 ```
+
+`not_before` guarantees the first scheduled tweet is not earlier than a given
+time. This is useful when tweets promote content that has a future
+`published_at`.
 
 ### Polymorphic source
 

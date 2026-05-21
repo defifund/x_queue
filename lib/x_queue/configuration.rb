@@ -2,9 +2,11 @@
 
 module XQueue
   class Configuration
-    attr_accessor :api_key, :api_key_secret,
-                  :delay_range, :thread_delay_range,
-                  :queue_name
+    attr_accessor :api_key,
+      :api_key_secret,
+      :delay_range,
+      :thread_delay_range,
+      :queue_name
 
     def initialize
       @api_key = nil
