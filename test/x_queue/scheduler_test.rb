@@ -52,5 +52,54 @@ module XQueue
       assert_equal 1, tweets.first.thread_position
       assert_equal 2, tweets.second.thread_position
     end
+
+    def test_tweets_with_at_uses_exact_time_when_queue_empty
+      account = TestAccount.create!
+      target = 6.hours.from_now.change(usec: 0)
+
+      Scheduler.tweets(texts: ["a", "b"], account: account, at: target)
+
+      tweets = Tweet.order(:scheduled_at).to_a
+      assert_equal target, tweets.first.scheduled_at
+      assert_equal target + 20.minutes, tweets.second.scheduled_at
+    end
+
+    def test_tweets_with_at_ignores_later_existing_queue
+      account = TestAccount.create!
+      later = 2.days.from_now.change(usec: 0)
+      Tweet.create!(content: "later", account: account, status: :scheduled, scheduled_at: later)
+
+      target = 6.hours.from_now.change(usec: 0)
+      Scheduler.tweets(texts: ["new"], account: account, at: target)
+
+      new_tweet = Tweet.where(content: "new").sole
+      assert_equal target, new_tweet.scheduled_at
+    end
+
+    def test_tweets_with_at_in_the_past_coerced_to_now
+      account = TestAccount.create!
+      past = 2.hours.ago
+
+      before = Time.current
+      Scheduler.tweets(texts: ["x"], account: account, at: past)
+      after = Time.current
+
+      scheduled = Tweet.sole.scheduled_at
+      assert scheduled >= before - 1.second, "expected scheduled_at >= now, got #{scheduled}"
+      assert scheduled <= after + 1.second,  "expected scheduled_at near now, got #{scheduled}"
+    end
+
+    def test_thread_with_at_uses_exact_time
+      account = TestAccount.create!
+      later = 2.days.from_now.change(usec: 0)
+      Tweet.create!(content: "later", account: account, status: :scheduled, scheduled_at: later)
+
+      target = 6.hours.from_now.change(usec: 0)
+      Scheduler.thread(texts: ["1/2", "2/2"], account: account, at: target)
+
+      thread_tweets = Tweet.where.not(thread_id: nil).order(:thread_position).to_a
+      assert_equal target, thread_tweets.first.scheduled_at
+      assert_equal target, thread_tweets.second.scheduled_at
+    end
   end
 end
