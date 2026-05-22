@@ -7,14 +7,22 @@ module XQueue
     #   XQueue::Scheduler.tweets(
     #     texts: ["tweet 1", "tweet 2"],
     #     account: account,
-    #     source: article, # optional, polymorphic
-    #     not_before: article.published_at # optional
+    #     source: article,        # optional, polymorphic
+    #     at: article.published_at # optional, explicit target time
     #   )
-    def self.tweets(texts:, account:, source: nil, not_before: nil)
+    #
+    # `at:` and `not_before:` express different intents:
+    #   - `at:` — schedule at this exact time (only coerced forward to now
+    #     if it is in the past). The account's existing queue is ignored.
+    #   - `not_before:` — earliest allowed time; the scheduler still appends
+    #     after the account's last scheduled tweet, whichever is later.
+    # If neither is given, the first tweet is queued right after the
+    # account's current tail.
+    def self.tweets(texts:, account:, source: nil, not_before: nil, at: nil)
       return 0 if texts.blank?
 
       config = XQueue.configuration
-      scheduled_at = next_slot(account, not_before: not_before)
+      scheduled_at = pick_start(account, not_before: not_before, at: at)
 
       texts.each do |text|
         Tweet.create!(
@@ -35,14 +43,18 @@ module XQueue
     #   XQueue::Scheduler.thread(
     #     texts: ["1/3 ...", "2/3 ...", "3/3 ..."],
     #     account: account,
-    #     source: article, # optional
-    #     not_before: article.published_at # optional
+    #     source: article,         # optional
+    #     at: article.published_at # optional, explicit target time
     #   )
-    def self.thread(texts:, account:, source: nil, not_before: nil)
+    #
+    # All tweets in a thread share one `scheduled_at`; the posting worker
+    # applies `thread_delay_range` between replies at runtime.
+    # See `.tweets` for the difference between `at:` and `not_before:`.
+    def self.thread(texts:, account:, source: nil, not_before: nil, at: nil)
       return 0 if texts.blank?
 
       thread_id = SecureRandom.uuid
-      scheduled_at = next_slot(account, not_before: not_before)
+      scheduled_at = pick_start(account, not_before: not_before, at: at)
 
       texts.each_with_index do |text, i|
         Tweet.create!(
@@ -59,6 +71,12 @@ module XQueue
       texts.size
     end
 
+    def self.pick_start(account, not_before:, at:)
+      return [at, Time.current].max if at
+
+      next_slot(account, not_before: not_before)
+    end
+
     def self.next_slot(account, not_before: nil)
       config = XQueue.configuration
       last_time = Tweet.where(account: account)
@@ -70,6 +88,6 @@ module XQueue
       [base, Time.current, not_before].compact.max
     end
 
-    private_class_method :next_slot
+    private_class_method :pick_start, :next_slot
   end
 end
